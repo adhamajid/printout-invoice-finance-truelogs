@@ -1,0 +1,242 @@
+<t t-name="studio_report_document">
+                    <div class="page"/>
+                    <style>
+                    /* Umum */
+                    body {
+                        font-family: Arial, sans-serif;
+                    }
+                    
+                    /* CSS untuk styling kotak */
+                    .kotak-teks {
+                        border: 1px solid black; /* Garis kotak: ketebalan 1px, solid, warna hitam */
+                        padding: 5px; /* Jarak antara teks dan garis kotak */
+                        display: inline-block; /* Penting agar kotak hanya selebar teks */
+                        margin: 5px; /* Jarak dari elemen lain (opsional) */
+                    }
+
+                    /* Header Invoice */
+                    .invoice-header {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-bottom: 20px;
+                    }
+                    .invoice-header h1 {
+                        font-size: 24px;
+                        font-style: italic;
+                        margin: 0 15px;
+                        padding: 0;
+                        white-space: nowrap;
+                    }
+                    .header-line {
+                        border-top: 2px solid black;
+                        width: 100px;
+                        flex-grow: 1;
+                        max-width: 150px;
+                    }
+
+                    /* Kontainer Kotak */
+                    .boxes-container {
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 20px; /* Jarak antar kotak */
+                        margin-top: 10px;
+                        /* Fallback untuk gap jika wkhtmltopdf tidak mendukung gap */
+                        /* Jika gap tidak bekerja, uncomment ini dan sesuaikan margin-right di .boxes-container &gt; div */
+                    }
+                    /* Fallback margin for older wkhtmltopdf that might not support gap */
+                    /* .boxes-container &gt; div {
+                        margin-right: 20px;
+                    }
+                    .boxes-container &gt; div:last-child {
+                        margin-right: 0;
+                    } */
+
+
+                    /* Styling Kotak */
+                    .invoice-box {
+                        border: 2px solid black;
+                        padding: 15px;
+                        box-sizing: border-box; /* Pastikan padding dan border tidak menambah ukuran */
+                        flex: 1; /* Agar kotak mengisi ruang yang tersedia secara merata */
+                        font-size: 12px; /* UKURAN FONT DIKECILKAN DI SINI */
+                    }
+
+                    /* KOTAK KIRI - Lebih Tinggi */
+                    .invoice-box.left-box {
+                        height: 150px; /* TINGGI KOTAK KIRI DIATUR DI SINI */
+                        flex: 0 0 60%;
+                    }
+
+                    /* KOTAK KANAN - Tinggi Default atau Lebih Pendek */
+                    .invoice-box.right-box {
+                        height: 150px; /* TINGGI KOTAK KANAN DIATUR DI SINI */
+                        flex: 0 0 35%;
+                    }
+
+                    .invoice-box .field-label {
+                        font-weight: bold;
+                    }
+                    .invoice-box .field-value {
+                        margin-bottom: 3px; /* Spasi antar field dikurangi sedikit agar lebih rapat */
+                    }
+                    .all-border-table, .all-border-table th, .all-border-table td {
+                        border: 1px solid black !important;
+                        border-collapse: collapse;
+                      }
+                </style>
+                
+                <div class="invoice-header" style="margin-top: 50px;">
+                    <div class="header-line"/>
+                    <h1>INVOICE</h1>
+                    <div class="header-line"/>
+                </div>
+
+                <div class="boxes-container">
+                    <div class="invoice-box left-box">
+                        <div class="field-value">
+                            <span class="field-label">Customer</span>
+                        </div>
+                        <div class="field-value">
+                            <span class="field-label">Name     :</span> <span t-field="doc.partner_id.name"/>
+                        </div>
+                        <div class="field-value">
+                            <span class="field-label">Address:</span> <span t-field="doc.partner_id.street"/>,
+                            <br/>               
+                            <span t-field="doc.company_id.partner_id.state_id.name"/>,
+                            <span t-field="doc.company_id.partner_id.zip"/>
+                        </div>
+                        <div class="field-value">
+                            <span class="field-label">Phone    :</span> <span t-field="doc.partner_id.phone"/>
+                        </div>
+                        <div class="field-value">
+                            <span class="field-label">NPWP    :</span> <span t-field="doc.partner_id.vat"/>
+                        </div>
+                    </div>
+
+                    <div class="invoice-box right-box">
+                        <div class="field-value">
+                            <span class="field-label">References</span>
+                        </div>
+                        <div class="field-value">
+                            <span class="field-label">Contract No   :</span> <span t-field="doc.name"/>
+                        </div>
+                        <div class="field-value">
+                            <span class="field-label">Date                :</span> <span t-field="doc.invoice_date" t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                        </div>
+                        <div class="field-value">
+                            <span class="field-label">Memorandum:</span> Belum tahu isi apa
+                        </div>
+                        
+                    </div>
+                </div> 
+
+                <div style="margin-top: 50px;">
+                    <h3>Invoice Lines (Contoh)</h3>
+                    <table class="table table-sm o_main_table all-border-table">
+                        <thead>
+                            <tr>
+                                <th class="text-center">No</th>
+                                <th>Description</th>
+                                <th class="text-right">Quantity</th>
+                                <th class="text-right">Unit Price</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <t t-set="no" t-value="0"/>
+                        <tbody>
+                            <t t-foreach="doc.invoice_line_ids" t-as="line">
+                                <tr>
+                                    <td class="text-center">
+                                        <t t-set="no" t-value="no+1"/>
+                                        <span t-esc="no"/>
+                                    </td>
+                                    <td><span t-field="line.name"/></td>
+                                    <td class="text-right"><span t-field="line.quantity"/></td>
+                                    <td class="text-right"><span t-field="line.price_unit"/></td>
+                                    <td class="text-right"><span t-field="line.price_subtotal"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <div class="clearfix">
+                         <div class="row mt-3">
+                <div class="col-4 ">
+                    <strong>Terbilang:</strong>
+                </div>
+                <div class="col-3">
+                    <!-- Tampilkan total_quantity di sini -->
+                    <t t-esc="total_quantity"/>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-8 text-end">
+                    <strong>Subtotal:</strong>
+                </div>
+                <div class="col-4 text-end">
+                    <span t-field="doc.amount_untaxed"/>
+                    
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-8 text-end">
+                    <strong>Discount:</strong>
+                </div>
+                <div class="col-4 text-end">
+                    0.00
+                    <span style="display: block; width: 100%; border-top: 1px solid #000; margin-top: -5px 0;"/>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-8 text-end">
+                    <strong>Total IDR Excl. VAT:</strong>
+                </div>
+                <div class="col-4 text-end">
+                    <span t-field="doc.amount_untaxed"/>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-8 text-end">
+                    <strong>VAT:</strong>
+                </div>
+                <div class="col-4 text-end">
+                    <span t-field="doc.amount_tax"/>
+                    <span style="display: block; width: 100%; border-top: 1px solid #000; margin-top: -5px 0;"/>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-8 text-end">
+                    <strong>Amount Paid:</strong>
+                </div>
+                <div class="col-4 text-end">
+                    <span t-field="doc.amount_total"/>
+                </div>
+            </div>
+
+                        
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <span class="kotak-teks">
+        <strong><em><u>Please Remit payment to:<br/></u></em></strong>
+        PT. TRUELOGS GEO ENERGI<br/>
+        Bank Mandiri Kantor Cabang Percetakan Negara<br/>
+        Rek USD : 006 000 737 514 4<br/>
+        Rek IDR : 006 000 737 513 6
+    </span>
+    
+    <span>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        __________________________________<br/>
+        <strong>Ferga Maulia<br/></strong>Finance Manager
+    </span>
+</div>
+                </div>
+                </t>
